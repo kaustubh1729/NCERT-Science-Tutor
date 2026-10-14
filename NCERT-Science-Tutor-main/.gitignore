@@ -1,0 +1,65 @@
+# ------------------------------------------------------------------------------
+# Note on db/ and cache/
+# ------------------------------------------------------------------------------
+# These are NOT ignored, and that is deliberate.
+#
+# The retrieval index is a build artifact that the serving process must never
+# construct at startup (see docs/adr/0001-prebuilt-index.md). It is committed so a
+# deployment is a checkout, not a rebuild. At ~48 MB it is well inside what git
+# handles comfortably.
+#
+# The previous .gitignore listed both directories, while both were in fact tracked
+# — git ignores .gitignore for already-tracked files. The rules were describing the
+# opposite of what the repository did, which is worse than having no rules: it made
+# the DEPLOYMENT.md advice ("the app will create the DB on first run") look correct.
+# ------------------------------------------------------------------------------
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+ncert/
+venv/
+.venv/
+env/
+ENV/
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.secret
+secrets/
+
+# Test and type-check caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Build intermediates — regenerable from data/ by scripts/build_index.py
+cache/*.tmp
+db/*.building
+
+# Editors and OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Evaluation output — results are reports, not source
+eval/results/

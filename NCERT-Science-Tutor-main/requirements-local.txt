@@ -1,0 +1,30 @@
+# Local embedding backend — torch and sentence-transformers.
+#
+# Install these when NCERT_EMBEDDING_BACKEND=local, which is:
+#   - always, to BUILD the index with a local model, and
+#   - at serve time only on an instance with >= 2 GB RAM.
+#
+#     pip install -r requirements.txt -r requirements-local.txt
+#
+# ------------------------------------------------------------------------------
+# The measurement that motivates keeping this separate
+# ------------------------------------------------------------------------------
+# Serving process RSS, this corpus (3,597 chunks, 768-dim), measured:
+#
+#     with these packages     943 MB      <- exceeds Render Free/Starter (512 MB)
+#     without them          ~300 MB       <- fits comfortably
+#
+# The model weights are 419 MB of that; torch's runtime is most of the rest. Using
+# a smaller sentence-transformers model does not solve it, because torch is the
+# floor. That is why the alternative is a hosted embedding API rather than a
+# smaller local model. See docs/adr/0002-embedding-backend.md.
+# ------------------------------------------------------------------------------
+
+# The CPU-only wheel index. The default PyPI torch wheel bundles CUDA libraries —
+# roughly 2.5 GB of GPU runtime that a Render instance has no device for, and which
+# on its own can exhaust a free-tier build's disk allowance.
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+torch==2.11.0
+sentence-transformers==5.1.2
+langchain-huggingface==1.0.1

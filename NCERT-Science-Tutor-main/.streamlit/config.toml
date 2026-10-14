@@ -1,0 +1,38 @@
+# Streamlit server configuration.
+#
+# Committing this is what stops the deployment behaving differently from local
+# development for reasons nobody can see in the diff. Flags passed on the command
+# line in render.yaml are duplicated here intentionally: the file is the record,
+# the flags are the override.
+
+[server]
+headless = true
+# Streamlit's default is 200 MB. Nothing in this application accepts an upload, and
+# a 200 MB buffer is a meaningful fraction of a 512 MB instance.
+maxUploadSize = 1
+enableXsrfProtection = true
+# CORS protection is disabled because Render terminates TLS at its proxy and
+# forwards to the container over plain HTTP; with CORS on, Streamlit rejects the
+# proxied websocket handshake and the page loads but never connects.
+enableCORS = false
+fileWatcherType = "none"          # no source changes at runtime; saves a watcher thread
+
+[browser]
+gatherUsageStats = false
+
+[client]
+# Never render a Python traceback into the page. Errors are logged server-side and
+# surfaced to the user as a message they can act on. A stack trace in the browser
+# leaks file paths and library versions to anyone who visits.
+showErrorDetails = "none"
+toolbarMode = "minimal"
+
+[runner]
+# Re-running the script on every widget interaction is Streamlit's execution model,
+# but magic display of bare expressions makes it easy to leak internals into the UI
+# by accident.
+magicEnabled = false
+
+[theme]
+base = "light"
+primaryColor = "#1f6feb"

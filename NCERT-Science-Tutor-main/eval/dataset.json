@@ -1,0 +1,187 @@
+[
+  {
+    "id": "rare-01",
+    "bucket": "rare_term",
+    "query": "What does sonorous mean?",
+    "expected_answer": "Sonority is the property of metals that lets them produce a ringing sound when struck",
+    "class": 7
+  },
+  {
+    "id": "rare-02",
+    "bucket": "rare_term",
+    "query": "What are stomata?",
+    "expected_answer": "Stomata are tiny pores present on the surface of leaves that regulate gas exchange and transpiration",
+    "class": 7
+  },
+  {
+    "id": "rare-03",
+    "bucket": "rare_term",
+    "query": "What is malleability?",
+    "expected_answer": "Malleability is the property of metals that allows them to be beaten into thin sheets",
+    "class": 7
+  },
+  {
+    "id": "rare-04",
+    "bucket": "rare_term",
+    "query": "What is infiltration?",
+    "expected_answer": "Infiltration is the process by which water seeps into the ground through soil",
+    "class": 7
+  },
+  {
+    "id": "rare-05",
+    "bucket": "rare_term",
+    "query": "What is chlorophyll?",
+    "expected_answer": "Chlorophyll is the green pigment in leaves that absorbs light energy for photosynthesis",
+    "class": 6
+  },
+
+  {
+    "id": "para-01",
+    "bucket": "paraphrase",
+    "query": "Why does a rolling ball eventually stop?",
+    "expected_answer": "Friction acts on the object in the direction opposite to its motion and brings it to rest",
+    "class": 9
+  },
+  {
+    "id": "para-02",
+    "bucket": "paraphrase",
+    "query": "How do plants make their own food?",
+    "expected_answer": "Green plants prepare food by photosynthesis using sunlight, carbon dioxide and water in the presence of chlorophyll",
+    "class": 6
+  },
+  {
+    "id": "para-03",
+    "bucket": "paraphrase",
+    "query": "Why does a heavy object need more push to get moving?",
+    "expected_answer": "Objects resist a change in their state of rest or motion because of inertia, which depends on mass",
+    "class": 9
+  },
+  {
+    "id": "para-04",
+    "bucket": "paraphrase",
+    "query": "What happens to food after we swallow it?",
+    "expected_answer": "Food passes through the digestive system where it is broken down into simpler substances that the body can absorb",
+    "class": 7
+  },
+  {
+    "id": "para-05",
+    "bucket": "paraphrase",
+    "query": "Why can we hear a bell ring but not in space?",
+    "expected_answer": "Sound needs a material medium to travel through and cannot propagate in vacuum",
+    "class": 9
+  },
+
+  {
+    "id": "def-01",
+    "bucket": "definition",
+    "query": "Define photosynthesis",
+    "expected_answer": "Photosynthesis is the process by which green plants prepare their food using sunlight, carbon dioxide and water in presence of chlorophyll",
+    "class": 6
+  },
+  {
+    "id": "def-02",
+    "bucket": "definition",
+    "query": "What is respiration?",
+    "expected_answer": "Respiration is the process of breaking down food to release energy in living organisms",
+    "class": 7
+  },
+  {
+    "id": "def-03",
+    "bucket": "definition",
+    "query": "State Newton's first law of motion",
+    "expected_answer": "An object at rest remains at rest and an object in motion continues to move with constant velocity unless a net force acts upon it",
+    "class": 9
+  },
+  {
+    "id": "def-04",
+    "bucket": "definition",
+    "query": "What is an acid?",
+    "expected_answer": "Acids are substances that taste sour and turn blue litmus paper red",
+    "class": 7
+  },
+  {
+    "id": "def-05",
+    "bucket": "definition",
+    "query": "What is evaporation?",
+    "expected_answer": "Evaporation is the process by which a liquid changes into vapour at temperatures below its boiling point",
+    "class": 9
+  },
+
+  {
+    "id": "cross-01",
+    "bucket": "cross_class",
+    "query": "Explain reflection of light",
+    "expected_answer": "Light bounces back when it strikes a smooth polished surface, and the angle of incidence equals the angle of reflection",
+    "class": null,
+    "note": "Taught qualitatively in Class 7 and quantitatively in Class 10 — probes prompt rule 4 and the class filter"
+  },
+  {
+    "id": "cross-02",
+    "bucket": "cross_class",
+    "query": "What is a force?",
+    "expected_answer": "A force is a push or a pull acting on an object that can change its state of motion or its shape",
+    "class": null
+  },
+  {
+    "id": "cross-03",
+    "bucket": "cross_class",
+    "query": "What are the states of matter?",
+    "expected_answer": "Matter exists as solid, liquid and gas, which differ in the arrangement and movement of their particles",
+    "class": null
+  },
+
+  {
+    "id": "multi-01",
+    "bucket": "multi_hop",
+    "query": "How does water absorbed by roots reach the leaves?",
+    "expected_answer": "Water absorbed by roots is transported upward through xylem tissue to the leaves, aided by transpiration pull",
+    "class": 7
+  },
+  {
+    "id": "multi-02",
+    "bucket": "multi_hop",
+    "query": "Why do metals conduct electricity but non-metals generally do not?",
+    "expected_answer": "Metals are good conductors of heat and electricity while non-metals are poor conductors",
+    "class": 7
+  },
+  {
+    "id": "multi-03",
+    "bucket": "multi_hop",
+    "query": "What is the connection between friction and the force needed to keep an object moving?",
+    "expected_answer": "Friction opposes relative motion, so a force equal to friction is needed to keep an object moving at constant velocity, giving zero net force",
+    "class": 9
+  },
+
+  {
+    "id": "unans-01",
+    "bucket": "unanswerable",
+    "query": "What is the atomic mass of ununoctium?",
+    "expected_answer": "Not found in the NCERT textbooks",
+    "class": null,
+    "unanswerable": true
+  },
+  {
+    "id": "unans-02",
+    "bucket": "unanswerable",
+    "query": "Who won the Nobel Prize in Physics in 2019?",
+    "expected_answer": "Not found in the NCERT textbooks",
+    "class": null,
+    "unanswerable": true
+  },
+  {
+    "id": "unans-03",
+    "bucket": "unanswerable",
+    "query": "Explain the Higgs mechanism and electroweak symmetry breaking",
+    "expected_answer": "Not found in the NCERT textbooks",
+    "class": null,
+    "unanswerable": true
+  },
+  {
+    "id": "unans-04",
+    "bucket": "unanswerable",
+    "query": "What is the current population of Mumbai?",
+    "expected_answer": "Not found in the NCERT textbooks",
+    "class": null,
+    "unanswerable": true
+  }
+]

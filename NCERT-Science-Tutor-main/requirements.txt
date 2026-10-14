@@ -1,0 +1,54 @@
+# Serving dependencies — what the deployed web service installs, and nothing more.
+#
+# ------------------------------------------------------------------------------
+# Why this file is small
+# ------------------------------------------------------------------------------
+# The previous requirements.txt listed 20 unpinned packages including `ragas`,
+# `datasets` and `torchvision`. None of the three is imported anywhere on the
+# serving path:
+#
+#   torchvision  - never imported at all. It pulls torch, which is ~800 MB of
+#                  wheels and the single largest contributor to both image size
+#                  and the 943 MB measured RSS.
+#   ragas        - evaluation only. Pulls its own LLM client stack.
+#   datasets     - evaluation only. Pulls pyarrow (~40 MB).
+#   pypdf        - superseded by pymupdf; the loader does not import it.
+#   langchain-openai - never imported; the generator uses the `openai` SDK directly.
+#
+# On Render's free tier, a 15-minute build timeout makes this the difference
+# between a deploy that finishes and one that does not.
+#
+# ------------------------------------------------------------------------------
+# Why everything is pinned
+# ------------------------------------------------------------------------------
+# Unpinned dependencies make a deployment non-reproducible: the same commit builds
+# differently on different days. That is unpleasant generally and specifically
+# dangerous here, because this stack has a history of breaking changes across minor
+# versions — `cohere` v4 -> v5 renamed the client class and made `model` required on
+# rerank, which is precisely the latent break that existed in this repository.
+#
+# Regenerate with:  pip freeze > requirements.lock.txt
+# ------------------------------------------------------------------------------
+
+# --- web layer ---
+streamlit==1.57.0
+
+# --- retrieval ---
+chromadb==1.5.9
+langchain-chroma==0.2.6
+langchain-core==1.3.2
+langchain-community==0.4.1        # BM25Retriever fallback only
+langchain-text-splitters==1.0.0
+rank-bm25==0.2.2                  # fallback when the FTS5 artifact is absent
+
+# --- model APIs ---
+cohere==6.1.0                     # reranking, and embeddings when backend=cohere
+openai==2.15.0                    # OpenAI-compatible client for NVIDIA NIM
+
+# --- ingestion (index build; small enough to keep for the LFS-pointer check) ---
+pymupdf==1.26.7
+
+# --- runtime ---
+python-dotenv==1.2.1
+pydantic==2.12.4
+tenacity==9.1.2

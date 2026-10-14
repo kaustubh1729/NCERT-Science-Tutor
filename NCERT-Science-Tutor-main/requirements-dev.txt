@@ -1,0 +1,17 @@
+# Development, testing and evaluation.
+#
+#     pip install -r requirements.txt -r requirements-local.txt -r requirements-dev.txt
+#
+# Deliberately never installed on the deployed service. `ragas` and `datasets`
+# together add ~120 MB and a second LLM client stack, none of which the serving path
+# touches.
+
+pytest==8.4.2
+pytest-cov==6.3.0
+black==25.9.0
+ruff==0.14.4
+mypy==1.18.2
+
+# --- evaluation harness (eval/) ---
+ragas==0.3.7
+datasets==4.4.1

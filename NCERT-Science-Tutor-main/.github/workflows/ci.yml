@@ -1,0 +1,134 @@
+# CI.
+#
+# ------------------------------------------------------------------------------
+# What the previous workflow did, and why it could not have worked
+# ------------------------------------------------------------------------------
+#
+# 1. It ran the full test suite with API keys from secrets. Several of those tests
+#    built a real RAGPipeline and issued live Cohere and NVIDIA calls — so CI was
+#    billable, non-deterministic, and red whenever a trial key rate-limited.
+#
+# 2. `test_load_all_skips_missing_classes` read all five PDFs. `actions/checkout`
+#    does not fetch Git LFS content by default, so those files were 130-byte pointer
+#    files and PyMuPDF failed on them.
+#
+# 3. `test_db_exists` asserted the index directory existed on the runner. It does
+#    not, unless the LFS/db checkout worked.
+#
+# 4. The "build" job ran `test -d src && echo "src/ exists"`, which verifies that
+#    `git clone` works.
+#
+# The suite is now hermetic: no network, no API keys, no LFS. Retrieval quality is
+# covered by tests over fixtures built in tmp_path, not over the committed index.
+# ------------------------------------------------------------------------------
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUNBUFFERED: "1"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.10 is the floor the code supports; 3.12 is what Render runs.
+        python-version: ["3.10", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false          # explicit: the tests must not depend on the PDFs
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          # Deliberately NOT requirements-local.txt — installing torch would add
+          # ~800 MB and several minutes to every CI run for zero coverage. The tests
+          # never load an embedding model.
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Verify SQLite has FTS5
+        # The lexical index depends on it, and the tests skip rather than fail
+        # without it. A silent skip on every run would hide real breakage.
+        run: |
+          python -c "
+          import sqlite3, sys
+          try:
+              sqlite3.connect(':memory:').execute('CREATE VIRTUAL TABLE t USING fts5(x)')
+              print('FTS5 available')
+          except sqlite3.OperationalError:
+              sys.exit('FTS5 missing - lexical index tests would be skipped')
+          "
+
+      - name: Lint
+        run: |
+          ruff check src/ app/ scripts/ eval/ tests/
+          ruff format --check src/ app/ scripts/ eval/ tests/
+
+      - name: Test
+        # No API keys are provided, on purpose. Any test that needs one is a test
+        # that does not belong in CI.
+        run: pytest -q --tb=short --cov=src --cov-report=term-missing
+
+      - name: Verify entrypoints import without side effects
+        # Regression: app/main.py used to call input() at module scope, so importing
+        # it blocked forever on stdin.
+        run: |
+          python -c "import app.main; import app.ui" 2>/dev/null || true
+          python -c "
+          import ast, pathlib, sys
+          # Only module-level statements are inspected. An input() inside main() is
+          # fine — it only runs when the module is executed. One at import scope is
+          # what made app/main.py unimportable.
+          for path in ['app/main.py', 'app/ui.py']:
+              tree = ast.parse(pathlib.Path(path).read_text(encoding='utf-8'))
+              for stmt in tree.body:
+                  if isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                      continue
+                  for node in ast.walk(stmt):
+                      if isinstance(node, ast.Call) and getattr(node.func, 'id', '') == 'input':
+                          sys.exit(f'{path}: input() at import scope makes the module unimportable')
+          print('entrypoints have no import-scope input()')
+          "
+
+  preflight:
+    # Proves the deployment gate itself works: with no index present it must fail
+    # with a diagnosis, not a traceback.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Preflight reports a missing index cleanly
+        run: |
+          rm -rf db
+          if python -m scripts.preflight; then
+            echo "::error::preflight passed with no index - the deployment gate is broken"
+            exit 1
+          fi
+          echo "preflight correctly refused to pass without an index"

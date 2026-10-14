@@ -1,0 +1,17 @@
+{
+  "manifest_version": 1,
+  "embedding_backend": "local",
+  "embedding_model": "sentence-transformers/all-mpnet-base-v2",
+  "embedding_dim": 768,
+  "chunk_count": 3353,
+  "chunk_size": 800,
+  "chunk_overlap": 150,
+  "built_at": "2026-08-07T09:20:04+00:00",
+  "source_files": [
+    "ncert_class10_science.pdf",
+    "ncert_class6_science.pdf",
+    "ncert_class7_science.pdf",
+    "ncert_class8_science.pdf",
+    "ncert_class9_science.pdf"
+  ]
+}

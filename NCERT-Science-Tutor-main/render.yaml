@@ -1,0 +1,112 @@
+# Render Blueprint.
+#
+# ------------------------------------------------------------------------------
+# What changed from the previous version, and why
+# ------------------------------------------------------------------------------
+#
+# 1. The background worker is gone.
+#    It was declared `plan: free`, which Render does not offer for workers — the
+#    blueprint would have been rejected. More importantly, even on a paid plan it
+#    could not have worked: each Render service gets its own filesystem, so an
+#    index built by the worker is invisible to the web service that needs it. The
+#    worker was solving a problem by writing to a disk nobody would read.
+#
+#    The index is now a build artifact committed to the repository. See
+#    docs/adr/0001-prebuilt-index.md.
+#
+# 2. `plan` is `starter`, not `free`, and there is a comment explaining the choice.
+#    Measured RSS with the local embedding backend is 943 MB. Free and Starter both
+#    cap at 512 MB. Either pay for `standard` (2 GB) or switch the embedding
+#    backend — both routes are spelled out below and in DEPLOYMENT.md.
+#
+# 3. The build runs preflight. A deployment that cannot serve now fails during
+#    build, with a diagnosis, instead of at runtime with a stack trace.
+#
+# 4. Python is pinned. Render's default tracks a moving target; chromadb and
+#    pymupdf wheel availability does not.
+#
+# ------------------------------------------------------------------------------
+
+services:
+  - type: web
+    name: ncert-science-tutor
+    runtime: python
+    region: singapore          # closest to the primary audience; change freely
+    plan: starter
+
+    # ------------------------------------------------------------------ MEMORY
+    # This service will OOM on `starter` (512 MB) with the DEFAULT settings below,
+    # because NCERT_EMBEDDING_BACKEND=cohere is what keeps torch out of the image.
+    # Pick one of these two configurations and delete the other:
+    #
+    #   A. Free/Starter (512 MB), torch-free  <-- configured below
+    #      NCERT_EMBEDDING_BACKEND=cohere
+    #      requirements: requirements.txt  (no torch)
+    #      Requires the index to have been built with the same Cohere model.
+    #
+    #   B. Standard (2 GB), local embeddings, no per-query embedding API call
+    #      plan: standard
+    #      NCERT_EMBEDDING_BACKEND=local
+    #      buildCommand: pip install -r requirements.txt -r requirements-local.txt
+    #
+    buildCommand: |
+      set -e
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      # PDFs are stored in Git LFS. Render checks out pointer files, not content.
+      # Serving does not read the PDFs (it reads the committed index), so this is a
+      # best-effort fetch that must not fail the build.
+      git lfs pull || echo "git lfs pull skipped - serving does not require the PDFs"
+      # Fail the build, not the first request, if the deployment cannot serve.
+      python -m scripts.preflight
+
+    startCommand: >
+      streamlit run app/ui.py
+      --server.port $PORT
+      --server.address 0.0.0.0
+      --server.headless true
+      --server.enableCORS false
+      --server.enableXsrfProtection true
+      --browser.gatherUsageStats false
+
+    # Streamlit's own health endpoint. Returns 200 as soon as the server binds,
+    # which is what Render needs — the pipeline warms lazily behind st.cache_resource.
+    healthCheckPath: /_stcore/health
+
+    autoDeploy: true
+
+    envVars:
+      # ---------------------------------------------------------------- secrets
+      # sync: false means "prompt me in the dashboard, never store in git".
+      - key: COHERE_API_KEY
+        sync: false
+      - key: NVIDIA_API_KEY
+        sync: false
+
+      # ------------------------------------------------------------ application
+      - key: NCERT_EMBEDDING_BACKEND
+        value: cohere
+      - key: NCERT_COHERE_EMBEDDING_MODEL
+        value: embed-english-v3.0
+      - key: NCERT_LEXICAL_BACKEND
+        value: fts5
+      - key: NCERT_LOG_LEVEL
+        value: INFO
+
+      # ------------------------------------------------------------------ runtime
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # Without this, HuggingFace tokenizers fork-warn on every request.
+      - key: TOKENIZERS_PARALLELISM
+        value: "false"
+
+    # No disk is declared, deliberately.
+    #
+    # A Render disk would be the obvious way to persist the index, but it is the
+    # wrong tool here: disks are not available on the free plan, they pin the
+    # service to a single instance (blocking horizontal scaling), and they would
+    # hold a *derived* artifact that is already reproducible from the repository.
+    # The index is ~48 MB committed — small enough that git is the simpler,
+    # cheaper and more auditable place for it.
